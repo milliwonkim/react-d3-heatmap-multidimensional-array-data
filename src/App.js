@@ -79,10 +79,15 @@ function Heatmap() {
 
             let newArray2 = newArray.flatMap((x) => x.value)
 
-            const myColor = d3
-                .scaleSequential()
-                .domain([0, d3.max(newArray2)])
-                .interpolator(d3.interpolateRainbow)
+            // const myColor = d3
+            //     .scaleSequential()
+            //     .domain([0, d3.max(newArray2)])
+            //     .interpolator(d3.interpolateRainbow)
+
+            var myColor = d3
+                .scaleLinear()
+                .domain([-3, d3.max(newArray2)])
+                .range(['white', 'blue'])
 
             const tooltip = d3
                 .selectAll('body')
