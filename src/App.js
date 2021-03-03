@@ -28,10 +28,19 @@ function Heatmap() {
         }).then((data) => {
             console.log('axios data: ', data)
 
-            let newArray = []
+            let newDimensions = []
+
+            for (let i = 1; i < data.data.data.dimensions.length; i++) {
+                newDimensions.push(data.data.data.dimensions[i])
+            }
+
+            data.data.index = data.data.index.reverse()
+            data.data.data.measures[0] = data.data.data.measures[0].reverse()
+
+            let newMeasures = []
 
             for (let i = 0; i < data.data.data.measures[0].length; i++) {
-                for (let j = 0; j < data.data.data.measures[0][i].length; j++) {
+                for (let j = 1; j < data.data.data.measures[0][i].length; j++) {
                     if (data.data.data.measures[0][i][j] === null) {
                         data.data.data.measures[0][i][j] = 0
                     }
@@ -42,11 +51,11 @@ function Heatmap() {
                         value: data.data.data.measures[0][i][j],
                     }
 
-                    newArray.push(object)
+                    newMeasures.push(object)
                 }
             }
 
-            const xAxis = data.data.data.dimensions
+            const xAxis = newDimensions
             const yAxis = data.data.index
 
             const xScale = d3
@@ -77,16 +86,16 @@ function Heatmap() {
                 .select('.domain')
                 .remove()
 
-            let newArray2 = newArray.flatMap((x) => x.value)
+            let beforeColor = newMeasures.flatMap((x) => x.value)
 
             // const myColor = d3
             //     .scaleSequential()
-            //     .domain([0, d3.max(newArray2)])
+            //     .domain([0, d3.max(newMeasures2)])
             //     .interpolator(d3.interpolateRainbow)
 
             var myColor = d3
                 .scaleLinear()
-                .domain([-3, d3.max(newArray2)])
+                .domain([d3.min(beforeColor), d3.max(beforeColor)])
                 .range(['white', 'blue'])
 
             const tooltip = d3
@@ -103,7 +112,7 @@ function Heatmap() {
                 .style('padding', '5px')
 
             svg.selectAll('rect')
-                .data(newArray)
+                .data(newMeasures)
                 .enter()
                 .append('rect')
                 .attr('x', function (d, index) {
@@ -147,6 +156,25 @@ function Heatmap() {
                         .style('stroke', 'none')
                         .style('opacity', 0.8)
                 })
+
+            console.log(newMeasures)
+
+            // svg.selectAll('text')
+            //     .data(newMeasures)
+            //     .enter()
+            //     .append('text')
+            //     .text(function (d) {
+            //         console.log(d.value)
+            //         return d.value
+            //     })
+            //     .attr('transform', 'translate(' + 116 + ',' + 45 + ')')
+            //     .attr('x', function (d, index) {
+            //         return xScale(d.x_axis)
+            //     })
+            //     .attr('y', function (d, i) {
+            //         return yScale(d.y_axis)
+            //     })
+            //     .attr('font-size', '7')
 
             // Add title to graph
             // svg.append('text')
