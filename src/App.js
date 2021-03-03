@@ -154,6 +154,7 @@ function Heatmap() {
                                 'Elapsed days: ' +
                                 i.x_axis
                         )
+                        .style('border', '1px solid black')
                         .style('opacity', 1)
 
                     d3.select(this).style('opacity', 1)
