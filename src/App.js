@@ -25,7 +25,7 @@ function Heatmap() {
             params: {
                 freq: 'monthly',
                 dimensions: 'm',
-                measures: changeParams,
+                measures: 'retention,user_cnt,cohort_user_cnt',
             },
         }).then((data) => {
             console.log('axios data: ', data)
@@ -38,6 +38,8 @@ function Heatmap() {
 
             data.data.index = data.data.index.reverse()
             data.data.data.measures[0] = data.data.data.measures[0].reverse()
+            data.data.data.measures[1] = data.data.data.measures[1].reverse()
+            data.data.data.measures[2] = data.data.data.measures[2].reverse()
 
             let newMeasures = []
 
@@ -46,11 +48,20 @@ function Heatmap() {
                     if (data.data.data.measures[0][i][j] === null) {
                         data.data.data.measures[0][i][j] = 0
                     }
+                    if (data.data.data.measures[1][i][j] === null) {
+                        data.data.data.measures[1][i][j] = 0
+                    }
+                    if (data.data.data.measures[2][i][j] === null) {
+                        data.data.data.measures[2][i][j] = 0
+                    }
 
                     let object = {
                         x_axis: data.data.data.dimensions[j],
                         y_axis: data.data.index[i],
-                        value: data.data.data.measures[0][i][j],
+                        valueOfRetention: data.data.data.measures[0][i][j],
+                        valueOfUserCount: data.data.data.measures[1][i][j],
+                        valueOfCohortUserCount:
+                            data.data.data.measures[2][i][j],
                     }
 
                     newMeasures.push(object)
@@ -72,7 +83,7 @@ function Heatmap() {
                 .domain(yAxis)
                 .padding(0.02)
 
-            const xHeight = 640
+            const xHeight = 0
 
             svg.append('g')
                 .style('font-size', 15)
@@ -88,7 +99,12 @@ function Heatmap() {
                 .select('.domain')
                 .remove()
 
-            let beforeColor = newMeasures.flatMap((x) => x.value)
+            let beforeColor =
+                changeParams === 'retention'
+                    ? newMeasures.flatMap((x) => x.valueOfRetention)
+                    : changeParams === 'user_cnt'
+                    ? newMeasures.flatMap((x) => x.valueOfUserCount)
+                    : newMeasures.flatMap((x) => x.valueOfCohortUserCount)
 
             var myColor = d3
                 .scaleLinear()
@@ -123,7 +139,13 @@ function Heatmap() {
                 .attr('width', xScale.bandwidth())
                 .attr('height', yScale.bandwidth())
                 .style('fill', function (d, index) {
-                    return myColor(d.value)
+                    if (changeParams === 'retention') {
+                        return myColor(d.valueOfRetention)
+                    } else if (changeParams === 'user_cnt') {
+                        return myColor(d.valueOfUserCount)
+                    } else {
+                        return myColor(d.valueOfCohortUserCount)
+                    }
                 })
                 .style('stroke-width', 4)
                 .style('stroke', 'none')
@@ -133,20 +155,19 @@ function Heatmap() {
                     'translate(' + 110 + ',' + margin.bottom + ')'
                 )
                 .on('mouseover', function (d, i) {
-                    if (i.value === null) {
-                        i.value = 0
-                    }
+                    // if (i.valueOfRetention === null) {
+                    //     i.valueOfRetention = 0
+                    // }
                     tooltip
                         .html(
-                            (changeParams === 'retention'
-                                ? 'Retention: '
-                                : changeParams === 'user_cnt'
-                                ? 'User Count: '
-                                : 'Cohort User Count: ') +
-                                i.value +
-                                (changeParams === 'retention'
-                                    ? '%'
-                                    : ' people') +
+                            'Retention: ' +
+                                i.valueOfRetention +
+                                '<br />' +
+                                'User Count: ' +
+                                i.valueOfUserCount +
+                                '<br />' +
+                                'Cohort User Count: ' +
+                                i.valueOfCohortUserCount +
                                 '<br />' +
                                 'First Purchase Month: ' +
                                 i.y_axis +
@@ -171,23 +192,41 @@ function Heatmap() {
                         .style('opacity', 0.8)
                 })
 
-            // svg.selectAll('text')
-            //     .data(newMeasures)
-            //     .enter()
-            //     .append('text')
-            //     .text(function (d, i) {
-            //         return d.value
-            //     })
-            //     .attr('transform', 'translate(' + 116 + ',' + 45 + ')')
-            //     .attr('x', function (d, index) {
-            //         return xScale(d.x_axis)
-            //     })
-            //     .attr('y', function (d, i) {
-            //         return yScale(d.y_axis)
-            //     })
-            //     .attr('font-size', '7')
+            svg.selectAll('text')
+                .data(newMeasures, function (d, i) {
+                    return d
+                })
+                .enter()
+                .append('text')
+                .text(function (d, i) {
+                    if (changeParams === 'retention') {
+                        if (d.valueOfRetention === 0) {
+                            return ''
+                        }
+                        return d.valueOfRetention
+                    } else if (changeParams === 'user_cnt') {
+                        if (d.valueOfUserCount === 0) {
+                            return ''
+                        }
+                        return d.valueOfUserCount
+                    } else {
+                        if (d.valueOfCohortUserCount === 0) {
+                            return ''
+                        }
+                        return d.valueOfCohortUserCount
+                    }
+                })
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'translate(' + 123 + ',' + 45 + ')')
+                .attr('x', function (d, index) {
+                    return xScale(d.x_axis)
+                })
+                .attr('y', function (d, i) {
+                    return yScale(d.y_axis)
+                })
+                .attr('font-size', '7')
 
-            // Add title to graph
+            // // Add title to graph
             // svg.append('text')
             //     .attr('x', 0)
             //     .attr('y', -50)
@@ -195,7 +234,7 @@ function Heatmap() {
             //     .style('font-size', '22px')
             // .text('A d3.js heatmap')
 
-            // Add subtitle to graph
+            // // Add subtitle to graph
             // svg.append('text')
             //     .attr('x', 0)
             //     .attr('y', -20)
@@ -210,6 +249,7 @@ function Heatmap() {
 
         return () => {
             svg.selectAll('rect').remove()
+            svg.selectAll('text').remove()
         }
     }, [changeParams])
 
