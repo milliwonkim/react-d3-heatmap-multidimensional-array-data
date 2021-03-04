@@ -149,15 +149,12 @@ function Heatmap() {
                 })
                 .style('stroke-width', 4)
                 .style('stroke', 'none')
-                .style('opacity', 0.8)
+                .style('opacity', 1)
                 .attr(
                     'transform',
                     'translate(' + 110 + ',' + margin.bottom + ')'
                 )
                 .on('mouseover', function (d, i) {
-                    // if (i.valueOfRetention === null) {
-                    //     i.valueOfRetention = 0
-                    // }
                     tooltip
                         .html(
                             'Retention: ' +
@@ -176,9 +173,10 @@ function Heatmap() {
                                 i.x_axis
                         )
                         .style('border', '1px solid black')
-                        .style('opacity', 1)
+                        .style('opacity', 1.5)
+                        .style('')
 
-                    d3.select(this).style('opacity', 1)
+                    d3.select(this).style('opacity', 0.5)
                 })
                 .on('mousemove', function (d, i) {
                     tooltip
@@ -187,9 +185,7 @@ function Heatmap() {
                 })
                 .on('mouseleave', function (d) {
                     tooltip.style('opacity', 0)
-                    d3.select(this)
-                        .style('stroke', 'none')
-                        .style('opacity', 0.8)
+                    d3.select(this).style('stroke', 'none').style('opacity', 1)
                 })
 
             svg.selectAll('text')
